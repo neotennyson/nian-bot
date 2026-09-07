@@ -1,0 +1,96 @@
+bot_name: NIAN
+mode: paper
+capital: 500000
+currency: INR
+timezone: Asia/Kolkata
+
+session:
+  open: "09:15"
+  close: "15:30"
+  square_off: "15:18"
+
+universe:
+  indexes:
+    - symbol: NIFTY
+      yf: ^NSEI
+      lot: 75
+      step: 50
+    - symbol: BANKNIFTY
+      yf: ^NSEBANK
+      lot: 30
+      step: 100
+    - symbol: SENSEX
+      yf: ^BSESN
+      lot: 20
+      step: 100
+  equities:
+    # starter basket — liquid F&O stocks, expandable to full F&O list
+    - RELIANCE
+    - TCS
+    - INFY
+    - HDFCBANK
+    - ICICIBANK
+    - SBIN
+    - BHARTIARTL
+    - LT
+    - ITC
+    - KOTAKBANK
+
+data:
+  provider: yahoo
+  lookback_years: 12
+  cache_dir: data/raw
+
+costs:
+  brokerage_per_order: 20.0
+  opt_stt_sell: 0.0015
+  fut_stt_sell: 0.0005
+  exch_opt_nse: 0.0003503
+  exch_fut_nse: 0.0000173
+  sebi_turnover: 0.000001
+  stamp_opt_buy: 0.00003
+  stamp_fut_buy: 0.00002
+  gst_on_charges: 0.18
+  ipft_opt: 0.00002
+  slippage_opt_pct: 0.002
+  slippage_fut_pts: 1.5
+  min_slippage_per_leg: 0.75
+
+risk:
+  risk_per_trade_pct: 1.0
+  max_lots_per_10l: 3
+  daily_loss_kill_pct: 2.0
+  weekly_loss_kill_pct: 4.0
+  max_concurrent_positions: 3
+
+strategies:
+  gap_continuation:
+    enabled: false
+    atr_period: 14
+    entry_atr: 0.70
+    stop_atr: 1.0
+    take_atr: 1.8
+    exit_eod: true
+  overnight_drift:
+    enabled: true
+    vix_gate: 17.0
+    health_lookback: 63
+    entry_time: "15:22"
+    exit_time: "09:20"
+  orb_breakout:
+    enabled: false
+    orb_minutes: 30
+    stop_atr: 1.0
+    target_r: 2.0
+    entry_cutoff: "13:00"
+  vix_reversion:
+    enabled: false
+    vix_high: 20.0
+    vix_low: 13.0
+    hold_days: 3
+
+execution:
+  broker: paper
+  poll_secs: 20
+  groww:
+    base_url: https://api.groww.in/v1

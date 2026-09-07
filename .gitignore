@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/raw/*.parquet
+data/raw/*.csv
+logs/*.db
+logs/*.log
+logs/*.json
+!results/backtest_report.json
+results/*.csv
+.DS_Store
