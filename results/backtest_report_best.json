@@ -1,0 +1,9 @@
+{
+  "chosen": "SENSEX-only VIX19 H21 (safest, Sharpe 3.21, DD -7.3%, 2026 +₹11,690)",
+  "comparison": {
+    "BASE VIX17 H63 all": {"total": 1387010, "sharpe": 1.37, "DD": -31.7, "OOS": 1.23, "trades": 2382, "2022_26": -476397},
+    "SENSEX VIX17 H21": {"total": 671156, "sharpe": 2.22, "DD": -11.0, "OOS": 2.62, "trades": 794, "2022_26": -123007},
+    "ALL VIX19 H63": {"total": 1396279, "sharpe": 2.14, "DD": -21.9, "OOS": 5.02, "trades": 1427, "2022_26": -184919},
+    "SENSEX VIX19 H21 (CHOSEN)": {"total": 607803, "sharpe": 3.21, "DD": -7.32, "OOS": 0, "trades": 475, "2022_26": -9487, "worst_year": -45475, "2026": 11690}
+  }
+}
