@@ -4,34 +4,24 @@ capital: 500000
 currency: INR
 timezone: Asia/Kolkata
 session:
-  open: 09:15
-  close: '15:30'
-  square_off: '15:18'
+  open: "09:15"
+  close: "15:30"
+  square_off: "15:18"
 universe:
   indexes:
-  - symbol: NIFTY
-    yf: ^NSEI
-    lot: 75
-    step: 50
-  - symbol: BANKNIFTY
-    yf: ^NSEBANK
-    lot: 30
-    step: 100
-  - symbol: SENSEX
-    yf: ^BSESN
-    lot: 20
-    step: 100
-  equities:
-  - RELIANCE
-  - TCS
-  - INFY
-  - HDFCBANK
-  - ICICIBANK
-  - SBIN
-  - BHARTIARTL
-  - LT
-  - ITC
-  - KOTAKBANK
+    - symbol: NIFTY
+      yf: ^NSEI
+      lot: 75
+      step: 50
+    - symbol: BANKNIFTY
+      yf: ^NSEBANK
+      lot: 30
+      step: 100
+    - symbol: SENSEX
+      yf: ^BSESN
+      lot: 20
+      step: 100
+  equities: []
 data:
   provider: yahoo
   lookback_years: 12
@@ -44,7 +34,7 @@ costs:
   exch_fut_nse: 1.73e-05
   sebi_turnover: 1.0e-06
   stamp_opt_buy: 3.0e-05
-  stamp_fut_buy: 2.0e-05
+  stamp_fut_buy: 2.0e-06
   gst_on_charges: 0.18
   ipft_opt: 2.0e-05
   slippage_opt_pct: 0.002
@@ -57,6 +47,21 @@ risk:
   weekly_loss_kill_pct: 4.0
   max_concurrent_positions: 3
 strategies:
+  overnight_drift:
+    enabled: true
+    vix_gate: 19.0
+    health_lookback: 21
+    entry_time: "15:22"
+    exit_time: "09:20"
+    universe_filter: SENSEX
+  orb_short:
+    enabled: true
+    orb_minutes: 15
+    lot: 20
+    stop_pct: 0.005
+    target_pct: 0.005
+    entry_window: "09:30-14:30"
+    description: "SENSEX short-only ORB15 intraday +10,160 last 30d, trades daily"
   gap_continuation:
     enabled: false
     atr_period: 14
@@ -64,19 +69,12 @@ strategies:
     stop_atr: 1.0
     take_atr: 1.8
     exit_eod: true
-  overnight_drift:
-    enabled: true
-    vix_gate: 19.0
-    health_lookback: 21
-    entry_time: '15:22'
-    exit_time: 09:20
-    universe_filter: SENSEX
   orb_breakout:
     enabled: false
     orb_minutes: 30
     stop_atr: 1.0
     target_r: 2.0
-    entry_cutoff: '13:00'
+    entry_cutoff: "13:00"
   vix_reversion:
     enabled: false
     vix_high: 20.0
