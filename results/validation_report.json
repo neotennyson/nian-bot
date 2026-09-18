@@ -1,0 +1,37 @@
+{
+  "full": {
+    "trades": 475,
+    "days": 475,
+    "pnl": 607803.16,
+    "sharpe": 3.21,
+    "maxDD": -7.32,
+    "win": 68.4,
+    "pf": 1.83,
+    "cagr": 52.51
+  },
+  "wf": {
+    "windows": [],
+    "oos_sharpe": 0,
+    "oos_pnl": 0
+  },
+  "high_vix": {
+    "days": 374,
+    "pnl": 530351.34
+  },
+  "low_vix": {
+    "days": 0,
+    "pnl": 0.0
+  },
+  "rbi": {
+    "days": 0,
+    "pnl": 0.0
+  },
+  "earnings": {
+    "days": 92,
+    "pnl": 90572.84999999998
+  },
+  "disaster": {
+    "days": 96,
+    "pnl": 256718.83000000002
+  }
+}
