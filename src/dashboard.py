@@ -31,12 +31,13 @@ left, right = st.columns([5,1])
 with left:
     st.markdown("# 🐉 NIAN — Break the Nian Market")
     st.markdown("**Autonomous Indian F&O • Profit-only • Overnight dragon that hunts only when fear + health align**")
-    st.write(f"<span class='small'>VIX ≥17 + 63-day health gate • 12y backtest • Groww + Dhan • Muse Spark 1.2</span>", unsafe_allow_html=True)
+    st.write(f"<span class='small'>VIX ≥19 + 21-day health gate • 12y backtest • Groww + Dhan • Powered by {BRAND.get('model','Space Bunny')}</span>", unsafe_allow_html=True)
 with right:
     st.image("https://em-content.zobj.net/source/microsoft-teams/363/dragon_1f409.png", width=90)
     st.write(f"<span class='small'>{datetime.now(IST).strftime('%d %b %Y %H:%M IST')}</span>", unsafe_allow_html=True)
 
 cfg=load_settings()
+BRAND=cfg.get("branding",{})
 strat=cfg.get("strategies",{}).get("overnight_drift",{})
 risk=cfg.get("risk",{})
 mode=cfg.get("execution",{}).get("broker","paper")
@@ -177,5 +178,24 @@ with tab3:
     """)
 
 st.divider()
-st.markdown("<center><span class='small'>This bot is powered by <b>Muse Spark 1.2</b> • Built Sep 2026 from scratch for “break the Nian market” • Evidence over opinion • Not financial advice</span></center>", unsafe_allow_html=True)
+BOT=BRAND.get("bot_name", cfg.get("bot_name","NIAN"))
+MODEL=BRAND.get("model","Space Bunny")
+st.markdown(f"""
+<div style="text-align:center; padding:18px 12px; margin-top:10px;
+            background:linear-gradient(180deg,#1a0f0f,#0d0808);
+            border:1px solid #4a1f0a; border-radius:14px;">
+  <div style="font-family:'Cinzel',serif; font-size:26px; color:#ffb020;
+              text-shadow:0 0 18px #ff3b1f80; font-weight:700;">
+    🐉 {BOT}
+  </div>
+  <div style="font-size:13px; color:#e8dcc8; margin-top:8px;">
+    This bot is <b>{BOT}</b> — powered by <b>{MODEL}</b>
+  </div>
+  <div style="font-size:11px; color:#9a8a6a; margin-top:10px; line-height:1.7;">
+    Indian F&amp;O • Index overnight drift (VIX + health gated) • Groww + Dhan • Paper trading only<br>
+    Backtested on 12 years of data with the full NSE cost stack • Evidence over opinion<br>
+    Past performance ≠ future returns • SEBI: 93% of retail F&amp;O traders lose money • Not financial advice
+  </div>
+</div>
+""", unsafe_allow_html=True)
 st.caption("Auto-refresh: Streamlit reruns on interaction — in live session keep paper loop running separately.")

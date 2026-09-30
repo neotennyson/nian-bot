@@ -1,4 +1,8 @@
 bot_name: NIAN
+branding:
+  bot_name: NIAN
+  model: Space Bunny
+  tagline: "Break the Nian Market"
 mode: paper
 capital: 500000
 currency: INR
