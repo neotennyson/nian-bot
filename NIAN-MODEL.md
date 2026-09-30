@@ -150,4 +150,4 @@ PYTHONPATH=nian-bot nian-bot/.venv/bin/streamlit run nian-bot/src/dashboard.py -
 
 ---
 
-*This bot is powered by **Muse Spark 1.2** — built Sep 2026 from scratch for the "break the Nian market" brief. Profit-only, evidence over opinion.*
+*This bot is **NIAN** — powered by **Muse Spark 1.3** — built Sep 2026 from scratch for the "break the Nian market" brief. Profit-only, evidence over opinion.*

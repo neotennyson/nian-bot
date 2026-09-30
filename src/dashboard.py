@@ -31,7 +31,7 @@ left, right = st.columns([5,1])
 with left:
     st.markdown("# 🐉 NIAN — Break the Nian Market")
     st.markdown("**Autonomous Indian F&O • Profit-only • Overnight dragon that hunts only when fear + health align**")
-    st.write(f"<span class='small'>VIX ≥19 + 21-day health gate • 12y backtest • Groww + Dhan • Powered by {BRAND.get('model','Space Bunny')}</span>", unsafe_allow_html=True)
+    st.write(f"<span class='small'>VIX ≥19 + 21-day health gate • 12y backtest • Groww + Dhan • Powered by {BRAND.get('model','Muse Spark 1.3')}</span>", unsafe_allow_html=True)
 with right:
     st.image("https://em-content.zobj.net/source/microsoft-teams/363/dragon_1f409.png", width=90)
     st.write(f"<span class='small'>{datetime.now(IST).strftime('%d %b %Y %H:%M IST')}</span>", unsafe_allow_html=True)
@@ -179,7 +179,7 @@ with tab3:
 
 st.divider()
 BOT=BRAND.get("bot_name", cfg.get("bot_name","NIAN"))
-MODEL=BRAND.get("model","Space Bunny")
+MODEL=BRAND.get("model","Muse Spark 1.3")
 st.markdown(f"""
 <div style="text-align:center; padding:18px 12px; margin-top:10px;
             background:linear-gradient(180deg,#1a0f0f,#0d0808);
