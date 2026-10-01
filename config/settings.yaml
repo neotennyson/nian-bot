@@ -58,6 +58,9 @@ strategies:
     entry_time: "15:22"
     exit_time: "09:20"
     universe_filter: SENSEX
+    engines:
+      - {symbol: SENSEX, vix_gate: 19.0, health_lookback: 21}
+      - {symbol: NIFTY, vix_gate: 19.0, health_lookback: 63}
   orb_short:
     enabled: true
     orb_minutes: 15

@@ -33,6 +33,7 @@ class Orchestrator:
         strat=self.cfg.get("strategies",{}).get("overnight_drift",{})
         self.vix_gate=float(strat.get("vix_gate",17.0))
         self.health_lb=int(strat.get("health_lookback",63))
+        self.engines=strat.get("engines") or [{"symbol": strat.get("universe_filter","SENSEX"), "vix_gate": self.vix_gate, "health_lookback": self.health_lb}]
         self.entry_t=dtime.fromisoformat(strat.get("entry_time","15:22"))
         self.exit_t=dtime.fromisoformat(strat.get("exit_time","09:20"))
         self._position: dict[str,int] = {}  # symbol -> qty (lots*lot_size)
@@ -47,26 +48,27 @@ class Orchestrator:
         n=now or ist_now()
         return n.time() >= self.square
 
-    def _health_ok(self, symbol: str, yf: str) -> bool:
+    def _health_ok(self, symbol: str, yf: str, lookback: int | None=None) -> bool:
+        lb=int(lookback or self.health_lb)
         # fetch last 200 days to compute trailing overnight sum
         try:
             df=cached_fetch(yf, symbol.lower()+"_daily", 2, refresh=False)
             df.index=pd.to_datetime(df.index).normalize()
-            if len(df) < self.health_lb + 5:
+            if len(df) < lb + 5:
                 return False
             overnight=pd.Series(index=df.index, dtype=float)
             for i in range(1,len(df)):
                 overnight.iloc[i]=float(df.iloc[i]["open"]/df.iloc[i-1]["close"]-1)
-            h=float(overnight.tail(self.health_lb).sum())
+            h=float(overnight.tail(lb).sum())
             return h > 0
         except Exception:
             return False
 
-    def _vix_ok(self) -> bool:
+    def _vix_ok(self, gate: float | None=None) -> bool:
         try:
             vix=cached_fetch("^INDIAVIX","indiavix_daily",2,False)["close"]
             v=float(vix.iloc[-1])
-            return v >= self.vix_gate
+            return v >= float(gate if gate is not None else self.vix_gate)
         except Exception:
             return False
 
@@ -98,16 +100,21 @@ class Orchestrator:
             self._entry_price.clear()
             return {"action":"exit_overnight","time":str(t)}
 
-        # 15:22 entry
+        # 15:22 entry — per-engine gates (two-engine portfolio)
         is_entry_window = self.entry_t.hour==t.hour and abs(t.minute - self.entry_t.minute) <= 5
         if is_entry_window and not self._position:
-            if not self._vix_ok():
-                return {"action":"skip","reason":f"VIX < {self.vix_gate}"}
-            # check health per index
-            for uni in self.cfg.get("universe",{}).get("indexes",[]):
-                sym=uni["symbol"]; yf=uni["yf"]; lot=int(uni["lot"])
-                if not self._health_ok(sym, yf):
-                    continue
+            uni_by_sym={u["symbol"]: u for u in self.cfg.get("universe",{}).get("indexes",[])}
+            skips=[]
+            for eng in self.engines:
+                sym=eng.get("symbol"); gate=float(eng.get("vix_gate", self.vix_gate)); lb=int(eng.get("health_lookback", self.health_lb))
+                uni=uni_by_sym.get(sym)
+                if not uni:
+                    skips.append(f"{sym}: unknown symbol"); continue
+                yf=uni["yf"]; lot=int(uni["lot"])
+                if not self._vix_ok(gate):
+                    skips.append(f"{sym}: VIX < {gate}"); continue
+                if not self._health_ok(sym, yf, lb):
+                    skips.append(f"{sym}: health{lb} <= 0"); continue
                 # size: 1% risk, stop 1.5% => ~1-2 lots
                 price=self.broker.ltp(sym)
                 if price==0:
@@ -124,7 +131,7 @@ class Orchestrator:
                     self._entry_price[sym]=price
             if self._position:
                 return {"action":"enter_overnight","positions":dict(self._position)}
-            return {"action":"skip","reason":"health gate blocked"}
+            return {"action":"skip","reason":"; ".join(skips) if skips else "all engines blocked"}
 
         # square-off 15:18 forced flat
         if self.should_square(n) and self._position:
