@@ -38,7 +38,7 @@ costs:
   exch_fut_nse: 1.73e-05
   sebi_turnover: 1.0e-06
   stamp_opt_buy: 3.0e-05
-  stamp_fut_buy: 2.0e-06
+  stamp_fut_buy: 2.0e-05
   gst_on_charges: 0.18
   ipft_opt: 2.0e-05
   slippage_opt_pct: 0.002

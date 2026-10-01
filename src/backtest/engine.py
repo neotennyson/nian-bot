@@ -62,7 +62,7 @@ def run_signals(df: pd.DataFrame, signals: list, lot_size: int, capital: float, 
         risk_budget=capital * (risk_per_trade_pct/100)
         per_lot_risk=stop_dist*lot_size
         lots=max(1, int(risk_budget // per_lot_risk))
-        cap_lots=max(1, int(capital/1_000_000*10 * max_lots_per_10l) if capital>=500000 else max_lots_per_10l)
+        cap_lots=max(1, int(capital/1_000_000 * max_lots_per_10l))
         lots=min(lots, cap_lots)
         gross=cost_model.fut_pnl(entry, exit_px, lots, lot_size, s.direction)[0]
         cost=cost_model.fut_cost(entry, exit_px, lots, lot_size)

@@ -97,15 +97,14 @@ class Orchestrator:
             is_exit_window = t >= self.exit_t and t <= dtime(9,30)
         # simplified: if we have position and time is 09:20 ±5m, exit
         if self._position and (self.exit_t.hour==t.hour and abs(t.minute - self.exit_t.minute) <= 5):
-            pnl_total=0
+            pnl_total=0.0
             for sym, qty in list(self._position.items()):
                 ltp=self.broker.ltp(sym) or self._entry_price.get(sym,0)
-                # estimate pnl via broker
-                pnl_total+=0
+                pnl_total+=self._book_pnl(sym, qty, ltp)
                 self.broker.place_order(sym, abs(qty), "SELL" if qty>0 else "BUY", tag="overnight_exit")
             self._position.clear()
             self._entry_price.clear()
-            return {"action":"exit_overnight","time":str(t)}
+            return {"action":"exit_overnight","time":str(t),"realized":round(pnl_total,2)}
 
         # 15:22 entry — per-engine gates (two-engine portfolio)
         is_entry_window = self.entry_t.hour==t.hour and abs(t.minute - self.entry_t.minute) <= 5
@@ -155,7 +154,12 @@ class Orchestrator:
         return {"action":"hold","time":str(t), "pos": dict(self._position)}
 
     def _today_minute(self, symbol: str, yf: str) -> pd.DataFrame | None:
-        # live 1-min via token service; fallback to cached parquet
+        # live 1-min via token service; cached 60s to respect Dhan rate limits
+        import time
+        cache=getattr(self, "_min_cache", {})
+        hit=cache.get(symbol)
+        if hit and time.time()-hit[0] < 60 and len(hit[1]):
+            return hit[1]
         try:
             from src.core.tokens import get_token
             import json, urllib.request
@@ -175,7 +179,9 @@ class Orchestrator:
                 return None
             df=pd.DataFrame({k:j.get(k,[]) for k in ["open","high","low","close","volume"]})
             df.index=pd.to_datetime([datetime.fromtimestamp(x) for x in ts])
-            return df.between_time("09:15","15:30")
+            df=df.between_time("09:15","15:30")
+            self._min_cache={**cache, symbol: (time.time(), df)}
+            return df
         except Exception:
             return None
 
@@ -215,11 +221,34 @@ class Orchestrator:
                 return {"action":"enter_intraday","engine":eng["key"],"symbol":sym,"qty":qty,"side":side,"price":price}
         return {"action":"hold"}
 
+    def _lot_of(self, sym: str) -> int:
+        for u in self.cfg.get("universe",{}).get("indexes",[]):
+            if u["symbol"]==sym:
+                return int(u["lot"])
+        return 1
+
+    def _book_pnl(self, sym: str, qty: int, exit_px: float) -> float:
+        entry=self._entry_price.get(sym, exit_px)
+        lots=abs(qty)//max(1,self._lot_of(sym)) or 1
+        direction=1 if qty>0 else -1
+        try:
+            _, _, net=self.costs.fut_pnl(entry, exit_px, lots, self._lot_of(sym), direction)
+        except Exception:
+            net=0.0
+        self.risk.on_fill_pnl(net)
+        return net
+
     def _flatten(self, reason=""):
         for sym, qty in list(self._position.items()):
+            ltp=self.broker.ltp(sym) or self._entry_price.get(sym,0)
+            self._book_pnl(sym, qty, ltp)
             self.broker.place_order(sym, abs(qty), "SELL" if qty>0 else "BUY", tag=f"flat_{reason}")
         for sym, info in list(self._intraday_open.items()):
             q=info["qty"]
+            ltp=self.broker.ltp(sym) or info.get("entry",0)
+            self._entry_price[sym]=info.get("entry",ltp)
+            self._book_pnl(sym, q, ltp)
+            self._entry_price.pop(sym, None)
             self.broker.place_order(sym, abs(q), "SELL" if q>0 else "BUY", tag=f"flat_intraday_{reason}")
         self._position.clear()
         self._entry_price.clear()
