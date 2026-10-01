@@ -38,6 +38,13 @@ class Orchestrator:
         self.exit_t=dtime.fromisoformat(strat.get("exit_time","09:20"))
         self._position: dict[str,int] = {}  # symbol -> qty (lots*lot_size)
         self._entry_price: dict[str,float]={}
+        # intraday ORB engines (paper-only by design — never live)
+        self.intraday_engines=[]
+        for key in ("orb_short","orb_banknifty_long"):
+            icfg=self.cfg.get("strategies",{}).get(key,{})
+            if icfg.get("enabled"):
+                self.intraday_engines.append({"key": key, **icfg})
+        self._intraday_open: dict[str,dict]={}  # symbol -> {qty, entry, stop, target, dir, tag}
 
     def in_session(self, now=None) -> bool:
         n=now or ist_now()
@@ -133,15 +140,87 @@ class Orchestrator:
                 return {"action":"enter_overnight","positions":dict(self._position)}
             return {"action":"skip","reason":"; ".join(skips) if skips else "all engines blocked"}
 
+        # intraday ORB engine — paper broker only, 09:30-14:30 window
+        if isinstance(self.broker, PaperBroker) and self.intraday_engines:
+            if dtime(9,30) <= t <= dtime(14,30):
+                res=self._intraday_tick(n)
+                if res and res.get("action")!="hold":
+                    return res
+
         # square-off 15:18 forced flat
-        if self.should_square(n) and self._position:
+        if self.should_square(n) and (self._position or self._intraday_open):
             self._flatten("square_off")
             return {"action":"squared"}
 
         return {"action":"hold","time":str(t), "pos": dict(self._position)}
 
+    def _today_minute(self, symbol: str, yf: str) -> pd.DataFrame | None:
+        # live 1-min via token service; fallback to cached parquet
+        try:
+            from src.core.tokens import get_token
+            import json, urllib.request
+            tok=get_token("dhan")
+            import os
+            cid=os.environ.get("DHAN_CLIENT_ID","YOUR_DHAN_CLIENT_ID")
+            sid={"NIFTY":"13","SENSEX":"51","BANKNIFTY":"12"}.get(symbol)
+            if not sid:
+                return None
+            today=ist_now().strftime("%Y-%m-%d")
+            payload=json.dumps({"securityId":sid,"exchangeSegment":"IDX_I","instrument":"INDEX","interval":"1","oi":False,"fromDate":today,"toDate":today}).encode()
+            req=urllib.request.Request("https://api.dhan.co/v2/charts/intraday", data=payload, headers={"access-token":tok,"client-id":cid,"Content-Type":"application/json"})
+            with urllib.request.urlopen(req, timeout=10) as r:
+                j=json.loads(r.read().decode())
+            ts=j.get("timestamp",[])
+            if not ts:
+                return None
+            df=pd.DataFrame({k:j.get(k,[]) for k in ["open","high","low","close","volume"]})
+            df.index=pd.to_datetime([datetime.fromtimestamp(x) for x in ts])
+            return df.between_time("09:15","15:30")
+        except Exception:
+            return None
+
+    def _intraday_tick(self, n) -> dict:
+        from src.strategies.intraday_orb import orb_signal
+        uni_by_sym={u["symbol"]: u for u in self.cfg.get("universe",{}).get("indexes",[])}
+        for eng in self.intraday_engines:
+            sym=eng.get("symbol") or ("SENSEX" if eng["key"]=="orb_short" else None)
+            if not sym or sym in self._intraday_open or sym in self._position:
+                continue
+            uni=uni_by_sym.get(sym)
+            if not uni:
+                continue
+            df=self._today_minute(sym, uni["yf"])
+            if df is None or len(df) < 40:
+                continue
+            sig=orb_signal(df, orb_minutes=int(eng.get("orb_minutes",30)),
+                           direction=str(eng.get("direction","short") if eng["key"]!="orb_short" else "short"),
+                           stop_pct=float(eng.get("stop_pct",0.003)),
+                           target_pct=float(eng.get("target_pct",0.005)))
+            if not sig:
+                continue
+            lot=int(uni["lot"])
+            price=self.broker.ltp(sym) or sig["entry"]
+            if price==0:
+                price=sig["entry"]
+            if hasattr(self.broker,"set_price"):
+                self.broker.set_price(sym, price)
+            stop_pts=abs(price - sig["stop"])
+            lots=self.risk.lots_for_risk(stop_pts, lot)
+            qty=lots*lot
+            side="SELL" if sig["direction"]==-1 else "BUY"
+            res=self.broker.place_order(sym, qty, side, tag=f"intraday_{eng['key']}")
+            if "blocked" not in res:
+                self._intraday_open[sym]={"qty": qty if sig["direction"]==1 else -qty, "entry": price,
+                                          "stop": sig["stop"], "target": sig["target"], "dir": sig["direction"], "tag": eng["key"]}
+                return {"action":"enter_intraday","engine":eng["key"],"symbol":sym,"qty":qty,"side":side,"price":price}
+        return {"action":"hold"}
+
     def _flatten(self, reason=""):
         for sym, qty in list(self._position.items()):
             self.broker.place_order(sym, abs(qty), "SELL" if qty>0 else "BUY", tag=f"flat_{reason}")
+        for sym, info in list(self._intraday_open.items()):
+            q=info["qty"]
+            self.broker.place_order(sym, abs(q), "SELL" if q>0 else "BUY", tag=f"flat_intraday_{reason}")
         self._position.clear()
         self._entry_price.clear()
+        self._intraday_open.clear()
