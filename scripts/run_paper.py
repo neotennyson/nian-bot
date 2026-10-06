@@ -1,8 +1,18 @@
 #!/usr/bin/env python3
-import time, argparse
-from src.execution.orchestrator import Orchestrator
+import json, time, argparse
+from pathlib import Path
+from src.execution.orchestrator import ist_now
+
+HEARTBEAT=Path(__file__).resolve().parents[1]/"logs"/"heartbeat.json"
+
+def beat(action: str):
+    try:
+        HEARTBEAT.write_text(json.dumps({"ts": ist_now().isoformat(), "action": action}))
+    except OSError:
+        pass
 
 def main():
+    from src.execution.orchestrator import Orchestrator
     ap=argparse.ArgumentParser()
     ap.add_argument("--once", action="store_true")
     ap.add_argument("--loop", action="store_true")
@@ -10,10 +20,13 @@ def main():
     orch=Orchestrator()
     print(f"NIAN paper broker ready. capital={orch.capital} broker={orch.broker.__class__.__name__} session {orch.open}-{orch.close} square {orch.square}")
     if args.once:
-        print(orch.run_once())
+        res=orch.run_once()
+        print(res)
+        beat(f"once:{res.get('action')}")
         return
     while True:
         res=orch.run_once()
+        beat(res.get("action","hold"))
         if res["action"]!="hold":
             print(res)
         if not orch.in_session():
