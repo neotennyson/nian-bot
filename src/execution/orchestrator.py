@@ -124,9 +124,12 @@ class Orchestrator:
                 # size: 1% risk, stop 1.5% => ~1-2 lots
                 price=self.broker.ltp(sym)
                 if price==0:
-                    # use last close as proxy in paper
-                    try: price=float(cached_fetch(yf, sym.lower()+"_daily",2,False)["close"].iloc[-1])
-                    except: continue
+                    # live panel only — never fill at a stale cached close
+                    live=self._today_minute(sym, yf)
+                    if live is None or len(live)==0:
+                        skips.append(f"{sym}: no live price — skipped, not filled stale")
+                        continue
+                    price=float(live["close"].iloc[-1])
                     self.broker.set_price(sym, price) if hasattr(self.broker,"set_price") else None
                 stop_pts=price*0.015
                 lots=self.risk.lots_for_risk(stop_pts, lot)
