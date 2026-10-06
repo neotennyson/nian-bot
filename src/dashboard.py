@@ -1,33 +1,26 @@
 import streamlit as st
 import json, sqlite3
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, time as dtime
 import pandas as pd
+import plotly.graph_objects as go
 import pytz
 from src.core.config import load_settings
 
 ROOT=Path(__file__).resolve().parents[1]
 IST=pytz.timezone("Asia/Kolkata")
-st.set_page_config(page_title="NIAN — Terminal", layout="wide", page_icon="◈")
+st.set_page_config(page_title="NIAN", layout="wide")
 
 st.markdown("""
 <style>
-.stApp {background:#131722; color:#d1d4dc; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-h1,h2,h3 {color:#e8ebf0 !important; font-weight:600 !important; font-size:13px !important; letter-spacing:.06em; text-transform:uppercase}
+.stApp {background:#131722; color:#d1d4dc}
+h1,h2,h3 {color:#e8ebf0 !important; font-weight:600 !important}
 .small {font-size:11px; color:#787b86}
 .num {font-variant-numeric:tabular-nums}
-.pos {color:#26a69a} .neg {color:#ef5350} .warn {color:#f5a623}
-div[data-testid="stMetric"] {background:transparent; border:none; padding:0}
 div[data-testid="stMetric"] label {color:#787b86 !important; font-size:11px !important; text-transform:uppercase; letter-spacing:.05em}
-div[data-testid="stMetric"] [data-testid="stMetricValue"] {font-size:22px !important; font-variant-numeric:tabular-nums; color:#e8ebf0 !important}
-.badge {display:inline-block; padding:3px 12px; border-radius:4px; font-size:12px; font-weight:600}
-.badge-paper {border:1px solid #26a69a; color:#26a69a}
-.badge-live {border:1px solid #ef5350; color:#ef5350}
-.dot {display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px}
-.dot-g {background:#26a69a} .dot-r {background:#ef5350} .dot-y {background:#f5a623}
+div[data-testid="stMetric"] [data-testid="stMetricValue"] {font-variant-numeric:tabular-nums}
 section[data-testid="stSidebar"] {background:#1c2230}
-hr {border-color:#2a2e39; margin:14px 0}
-a {color:#2962ff}
+hr {border-color:#2a2e39}
 </style>
 """, unsafe_allow_html=True)
 
@@ -36,102 +29,150 @@ BRAND=cfg.get("branding",{})
 BOT=BRAND.get("bot_name", cfg.get("bot_name","NIAN"))
 MODEL=BRAND.get("model","Muse Spark 1.3")
 mode=cfg.get("execution",{}).get("broker","paper")
+risk=cfg.get("risk",{})
+strat=cfg.get("strategies",{}).get("overnight_drift",{})
+capital=float(cfg.get("capital",500000))
 now=datetime.now(IST)
+
+# ---------- data ----------
 pf=json.loads((ROOT/"results/portfolio_2engine.json").read_text())
-
-# ---------- sidebar: watchlist ----------
-with st.sidebar:
-    st.markdown(f"## ◈ {BOT}")
-    st.markdown(f"<span class='badge {'badge-paper' if mode=='paper' else 'badge-live'}>{'● PAPER' if mode=='paper' else '● LIVE'}</span>", unsafe_allow_html=True)
-    st.markdown("### Watchlist")
-    try:
-        for sym, parq in [("SENSEX","sensex_daily"),("NIFTY","nifty_daily"),("BANKNIFTY","banknifty_daily")]:
-            df=pd.read_parquet(ROOT/f"data/raw/{parq}.parquet")
-            c=float(df["close"].iloc[-1]); p=float(df["close"].iloc[-2])
-            ch=(c-p)/p*100
-            cls="pos" if ch>=0 else "neg"
-            st.markdown(f"<span class='num'><b>{sym}</b> {c:,.1f} <span class='{cls}'>{ch:+.2f}%</span><br><span class='small'>as of {pd.to_datetime(df.index[-1]).date()}</span></span>", unsafe_allow_html=True)
-        vix=pd.read_parquet(ROOT/"data/raw/indiavix_daily.parquet")["close"]
-        st.markdown(f"<span class='num'><b>VIX</b> {float(vix.iloc[-1]):.2f} <span class='small'>{pd.to_datetime(vix.index[-1]).date()}</span></span>", unsafe_allow_html=True)
-    except Exception as e:
-        st.markdown(f"<span class='small'>quotes unavailable: {e}</span>", unsafe_allow_html=True)
-    st.markdown("### Session")
-    st.markdown(f"<span class='num small'>IST {now.strftime('%d %b %H:%M')}<br>09:15–15:30 · square 15:18<br>kill −2% day / −4% week</span>", unsafe_allow_html=True)
-
-# ---------- header KPIs ----------
-k1,k2,k3,k4,k5,k6=st.columns(6)
-k1.metric("Total P&L", f"₹{pf['pnl']:,.0f}")
-k2.metric("Sharpe", f"{pf['sharpe']:.2f}")
-k3.metric("Max DD", f"{pf['maxDD']:.1f}%")
-y2026=float(pf.get("yearly",{}).get("2026",0))
-k4.metric("2026", f"₹{y2026:+,.0f}")
+eq=pd.read_csv(ROOT/"results/portfolio_daily.csv", parse_dates=["date"])
+vix=pd.read_parquet(ROOT/"data/raw/indiavix_daily.parquet")["close"]
+vix_last=float(vix.iloc[-1]); vix_date=pd.to_datetime(vix.index[-1]).date()
+rs={"realized_today":0.0,"realized_week":0.0}
 try:
     rs=json.loads((ROOT/"logs"/"risk_state.json").read_text())
-    rt=float(rs.get("realized_today",0.0))
 except Exception:
-    rt=0.0
-k5.metric("Today (paper)", f"₹{rt:+,.0f}")
-k6.metric("Capital", f"₹{cfg.get('capital',500000):,.0f}")
+    pass
 
-# ---------- equity chart ----------
-st.markdown("### Equity curve — 2-engine portfolio")
-try:
-    eq=pd.read_csv(ROOT/"results/portfolio_daily.csv", parse_dates=["date"])
-    st.area_chart(eq.set_index("date")["equity"], height=300)
-    st.markdown(f"<span class='small num'>530 trade-days · {eq.iloc[0]['date'].date()} → {eq.iloc[-1]['date'].date()} · net of all NSE costs</span>", unsafe_allow_html=True)
-except Exception as e:
-    st.markdown(f"<span class='small'>chart unavailable: {e}</span>", unsafe_allow_html=True)
-
-# ---------- engines ----------
-st.markdown("### Engines")
-def gate_state(symbol, vix_gate, lb):
+def health(symbol, lb):
     try:
-        vix=pd.read_parquet(ROOT/"data/raw/indiavix_daily.parquet")["close"]
-        v=float(vix.iloc[-1])
-        if v < vix_gate:
-            return False, f"VIX {v:.1f} < {vix_gate}"
         df=pd.read_parquet(ROOT/f"data/raw/{symbol.lower()}_daily.parquet")
         df.index=pd.to_datetime(df.index).normalize()
-        ov=(df["open"]/df["close"].shift(1)-1).tail(lb).sum()
-        if ov <= 0:
-            return False, f"health{lb} {ov:+.3f} ≤ 0"
-        return True, f"VIX {v:.1f} · health{lb} {ov:+.3f}"
-    except Exception as e:
-        return False, f"data: {e}"
+        return float((df["open"]/df["close"].shift(1)-1).tail(lb).sum())
+    except Exception:
+        return float("nan")
 
-e1,e2,e3,e4=st.columns(4)
-for col, name, desc, stt in [
-    (e1, "SENSEX overnight", "VIX≥19 · H21 · 15:22→09:20", gate_state("SENSEX",19,21)),
-    (e2, "NIFTY overnight", "VIX≥19 · H63 · 15:22→09:20", gate_state("NIFTY",19,63)),
-    (e3, "SENSEX short ORB30", "intraday 09:30–14:30", (True, "always armed in session")),
-    (e4, "BANKNIFTY long ORB30", "experiment · unpromoted", (True, "paper-tracked only")),
-]:
-    ok, reason=stt
-    col.markdown(f"<span class='dot dot-{'g' if ok else 'r'}'></span><b>{name}</b><br><span class='small'>{desc}<br>{reason}</span>", unsafe_allow_html=True)
+# ---------- status line ----------
+eng_states=[]
+for eng in strat.get("engines",[]):
+    s=eng["symbol"]; g=float(eng["vix_gate"]); lb=int(eng["health_lookback"])
+    h=health(s, lb)
+    if vix_last < g:
+        eng_states.append((s, False, f"VIX {vix_last:.1f}<{g:g}"))
+    elif not (h > 0):
+        eng_states.append((s, False, f"health{lb} {h:+.3f}"))
+    else:
+        eng_states.append((s, True, f"armed VIX {vix_last:.1f} health {h:+.3f}"))
+blocked=[f"{s} ({r})" for s,ok,r in eng_states if not ok]
+armed=[s for s,ok,_ in eng_states if ok]
+in_session=dtime(9,15) <= now.time() <= dtime(15,30)
+if armed and in_session:
+    status=f"ARMED — {', '.join(armed)} can enter at 15:22"
+elif not in_session:
+    status="MARKET CLOSED — next decision tomorrow 15:22"
+else:
+    status="FLAT — " + "; ".join(blocked)
+st.markdown(f"**{BOT}** · {'PAPER' if mode=='paper' else 'LIVE'} · {status} · {now.strftime('%d %b %H:%M IST')}", unsafe_allow_html=True)
+st.divider()
 
-# ---------- tabs for detail ----------
-tab1, tab2 = st.tabs(["Positions & fills", "Backtest"])
-with tab1:
-    db=ROOT/"logs"/"paper.db"
-    try:
-        con=sqlite3.connect(str(db))
-        df=pd.read_sql("SELECT ts, symbol, side, qty, price, tag FROM fills ORDER BY ts DESC LIMIT 25", con)
-        if len(df): st.dataframe(df, use_container_width=True, hide_index=True)
-        else: st.markdown("<span class='small'>no fills yet</span>", unsafe_allow_html=True)
-    except Exception as e:
-        st.markdown(f"<span class='small'>db read failed: {e}</span>", unsafe_allow_html=True)
-with tab2:
-    rp=ROOT/"results"/"backtest_report.json"
-    data=json.loads(rp.read_text())
-    rows=[{"symbol":k,"trades":v.get("trades"),"pnl":v.get("pnl"),"sharpe":v.get("sharpe"),"dd%":v.get("maxDD"),"win%":v.get("win"),"oos":v.get("oos_sharpe"),"2026":v.get("pnl_2026")}
-          for k,v in data.items() if not k.startswith("COMBINED") and not k.endswith("_wf")]
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+# ---------- overview: 4 key stats, TV strategy-tester style ----------
+total=pf["pnl"]
+c1,c2,c3,c4=st.columns(4)
+c1.metric("Total P&L", f"₹{total:+,.0f}", f"{total/capital*100:+.1f}% of capital")
+c2.metric("Max drawdown", f"{pf['maxDD']:.1f}%")
+c3.metric("Profitable (trade-days)", f"{(eq['daily_pnl']>0).mean()*100:.1f}%", f"{(eq['daily_pnl']>0).sum()}/{len(eq)} days")
+c4.metric("Today (paper)", f"₹{float(rs.get('realized_today',0.0)):+,.0f}", f"week ₹{float(rs.get('realized_week',0.0)):+,.0f}")
+
+# ---------- equity + drawdown ----------
+roll=eq["equity"].cummax()
+dd=(eq["equity"]-roll)/roll*100
+fig=go.Figure()
+fig.add_trace(go.Scatter(x=eq["date"], y=eq["equity"], fill="tozeroy", fillcolor="rgba(38,166,154,.25)",
+                         line=dict(color="#26a69a", width=1.5), name="Equity", hovertemplate="%{x|%Y-%m-%d}<br>₹%{y:,.0f}"))
+fig.update_layout(height=300, margin=dict(l=8,r=8,t=8,b=8), paper_bgcolor="#131722", plot_bgcolor="#131722",
+                  font=dict(color="#787b86", size=11), showlegend=False, hovermode="x unified",
+                  xaxis=dict(gridcolor="#1c2230", showgrid=True), yaxis=dict(gridcolor="#1c2230", tickformat=",.0f"))
+st.plotly_chart(fig, use_container_width=True)
+fig2=go.Figure()
+fig2.add_trace(go.Scatter(x=eq["date"], y=dd, fill="tozeroy", fillcolor="rgba(239,83,80,.3)",
+                          line=dict(color="#ef5350", width=1), name="Drawdown %", hovertemplate="%{x|%Y-%m-%d}<br>%{y:.1f}%"))
+fig2.update_layout(height=110, margin=dict(l=8,r=8,t=8,b=8), paper_bgcolor="#131722", plot_bgcolor="#131722",
+                   font=dict(color="#787b86", size=11), showlegend=False, hovermode="x unified",
+                   xaxis=dict(gridcolor="#1c2230"), yaxis=dict(gridcolor="#1c2230", ticksuffix="%"))
+st.plotly_chart(fig2, use_container_width=True)
+
+# ---------- monthly returns ----------
+eq["ym"]=eq["date"].dt.to_period("M").astype(str)
+m=eq.groupby("ym")["daily_pnl"].sum().tail(12)
+st.markdown("Monthly net (₹) — last 12 trade-months")
+mcols=st.columns(6)
+for i,(ym,v) in enumerate(m.items()):
+    with mcols[i % 6]:
+        color="#26a69a" if v>=0 else "#ef5350"
+        st.markdown(f"<span class='small'>{ym}</span><br><span class='num' style='color:{color}; font-size:15px'>₹{v:+,.0f}</span>", unsafe_allow_html=True)
 
 st.divider()
-st.markdown(f"""
-<div style="text-align:center; padding:12px 8px; border:1px solid #2a2e39; border-radius:6px;">
-  <div style="font-size:14px; font-weight:600; color:#e8ebf0;">◈ {BOT}</div>
-  <div style="font-size:12px; color:#d1d4dc; margin-top:4px;">This bot is <b>{BOT}</b> — powered by <b>{MODEL}</b></div>
-  <div class="small" style="margin-top:6px;">Paper trading only · past performance ≠ future returns · SEBI: 93% of retail F&O traders lose money · Not financial advice</div>
-</div>
-""", unsafe_allow_html=True)
+# ---------- positions (Kite-style) + fills ----------
+t1,t2=st.tabs(["Positions & fills", "Engines & backtest"])
+with t1:
+    try:
+        con=sqlite3.connect(str(ROOT/"logs"/"paper.db"))
+        fills=pd.read_sql("SELECT ts, symbol, side, qty, price, tag FROM fills ORDER BY ts", con)
+    except Exception as e:
+        fills=pd.DataFrame()
+        st.markdown(f"<span class='small'>journal unavailable: {e}</span>", unsafe_allow_html=True)
+    if len(fills):
+        pos=[]
+        for sym,g in fills.groupby("symbol"):
+            q=sum(r["qty"] if r["side"]=="BUY" else -r["qty"] for _,r in g.iterrows())
+            if q==0: continue
+            buys=g[g["side"]=="BUY"]; avg=(buys["qty"]*buys["price"]).sum()/buys["qty"].sum() if len(buys) else 0
+            try:
+                ltp=float(pd.read_parquet(ROOT/f"data/raw/{sym.lower()}_daily.parquet")["close"].iloc[-1])
+            except Exception:
+                ltp=avg
+            lot=next((u["lot"] for u in cfg["universe"]["indexes"] if u["symbol"]==sym), 1)
+            upnl=(ltp-avg)*(1 if q>0 else -1)*abs(q)
+            pos.append({"symbol":sym,"qty":q,"avg":round(avg,1),"ltp":round(ltp,1),"unreal":round(upnl)})
+        if pos:
+            st.markdown("**Open positions (paper)** <span class='small'>· LTP = last daily close, indicative only</span>", unsafe_allow_html=True)
+            st.dataframe(pd.DataFrame(pos), use_container_width=True, hide_index=True)
+        else:
+            st.markdown("FLAT — no open paper positions. <span class='small'>Correct when gates block.</span>", unsafe_allow_html=True)
+        st.markdown("**Journal (latest)**")
+        st.dataframe(fills.tail(15).iloc[::-1], use_container_width=True, hide_index=True)
+    else:
+        st.markdown("<span class='small'>no fills yet</span>", unsafe_allow_html=True)
+with t2:
+    rows=[]
+    for eng in strat.get("engines",[]):
+        s=eng["symbol"]
+        ok,reason=next(((o,r) for x,o,r in eng_states if x==s), (False,""))
+        rows.append({"engine":f"{s} overnight","gate":f"VIX≥{eng['vix_gate']} H{eng['health_lookback']}","state":"ARMED" if ok else "BLOCKED","why":reason})
+    rows.append({"engine":"SENSEX short ORB30","gate":"intraday 09:30–14:30","state":"ARMED","why":"paper-tracked"})
+    rows.append({"engine":"BANKNIFTY long ORB30","gate":"experiment","state":"WATCH","why":"16 trades — unpromoted"})
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    rp=ROOT/"results"/"backtest_report.json"
+    if rp.exists():
+        data=json.loads(rp.read_text())
+        r2=[{"symbol":k,"trades":v.get("trades"),"pnl":v.get("pnl"),"sharpe":v.get("sharpe"),"dd%":v.get("maxDD"),"oos":v.get("oos_sharpe")}
+            for k,v in data.items() if not k.startswith("COMBINED") and not k.endswith("_wf")]
+        st.dataframe(pd.DataFrame(r2), use_container_width=True, hide_index=True)
+
+# ---------- sidebar ----------
+with st.sidebar:
+    st.markdown("**Watchlist**")
+    for sym,parq in [("SENSEX","sensex_daily"),("NIFTY","nifty_daily"),("BANKNIFTY","banknifty_daily")]:
+        try:
+            df=pd.read_parquet(ROOT/f"data/raw/{parq}.parquet")
+            c=float(df["close"].iloc[-1]); p=float(df["close"].iloc[-2]); ch=(c-p)/p*100
+            st.markdown(f"<span class='num'><b>{sym}</b> {c:,.1f} <span style='color:{'#26a69a' if ch>=0 else '#ef5350'}'>{ch:+.2f}%</span><br><span class='small'>as of {pd.to_datetime(df.index[-1]).date()}</span></span>", unsafe_allow_html=True)
+        except Exception:
+            pass
+    st.markdown(f"<span class='num'><b>VIX</b> {vix_last:.2f} <span class='small'>{vix_date}</span></span>", unsafe_allow_html=True)
+    st.divider()
+    st.markdown(f"<span class='small'>risk/trade {risk.get('risk_per_trade_pct',1)}% · kill −{risk.get('daily_loss_kill_pct',2)}%/−{risk.get('weekly_loss_kill_pct',4)}%<br>costs: ₹20/order + STT + exch + GST + 1.5pt slip</span>", unsafe_allow_html=True)
+
+st.divider()
+st.markdown(f"<span class='small'>This bot is <b>{BOT}</b> — powered by <b>{MODEL}</b> · paper trading only · past performance ≠ future returns · not financial advice</span>", unsafe_allow_html=True)
