@@ -1,0 +1,6 @@
+{
+  "verdict": "KILLED 08-Oct-2026 — all 18 combos negative, Sharpe -1.4 to -4.5, DD -75% to -155%",
+  "note": "Shorting overnight on health<0 loses everywhere: the up-gap premium persists even in down-drift regimes; down moves happen intraday. Confirms long-side structural asymmetry.",
+  "best_of_dead": "BANKNIFTY VIX15 H63 Sharpe -1.38 (still dead)",
+  "tested": "3 symbols x VIX[15,17,19] x H[21,63], full NSE costs, 12y"
+}
