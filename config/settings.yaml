@@ -70,7 +70,7 @@ strategies:
     entry_window: "09:30-14:30"
     description: "SENSEX short-only ORB30 0.3/0.5 intraday +13,137 last 30d (9 trades 6/9), paper-tracked"
   orb_banknifty_long:
-    enabled: true
+    enabled: false
     symbol: BANKNIFTY
     orb_minutes: 30
     direction: long
@@ -78,7 +78,7 @@ strategies:
     stop_pct: 0.003
     target_pct: 0.01
     entry_window: "09:30-14:30"
-    description: "EXPERIMENT 16 trades only — BANKNIFTY long ORB30 +27,114 last 30d, NOT promoted, paper-tracked"
+    description: "KILLED 08-Oct-2026 — flipped to -16,655 on refreshed 45d panel. Was +27k on 30d (thin-sample lie)."
   gap_continuation:
     enabled: false
     atr_period: 14
