@@ -1,0 +1,164 @@
+[
+ {
+  "key": "SENSEX streak p=5",
+  "trades": 253,
+  "pnl": 7210.74,
+  "sharpe": 0.06,
+  "maxDD": -24.32,
+  "oos": 0.74,
+  "conviction": 0.312
+ },
+ {
+  "key": "NIFTY streak p=5",
+  "trades": 280,
+  "pnl": -53384.56,
+  "sharpe": -0.38,
+  "maxDD": -22.57,
+  "oos": -0.29,
+  "conviction": 0.257
+ },
+ {
+  "key": "SENSEX streak p=3",
+  "trades": 842,
+  "pnl": -557394.79,
+  "sharpe": -1.43,
+  "maxDD": -133.47,
+  "oos": -1.16,
+  "conviction": 0.147
+ },
+ {
+  "key": "NIFTY tom p=0",
+  "trades": 790,
+  "pnl": -678460.77,
+  "sharpe": -1.64,
+  "maxDD": -134.42,
+  "oos": -1.62,
+  "conviction": 0.13
+ },
+ {
+  "key": "SENSEX rsi2 p=10",
+  "trades": 1793,
+  "pnl": -1179251.11,
+  "sharpe": -1.47,
+  "maxDD": -238.67,
+  "oos": -1.47,
+  "conviction": 0.129
+ },
+ {
+  "key": "SENSEX orb_daily p=0.35",
+  "trades": 1624,
+  "pnl": -1300448.36,
+  "sharpe": -1.68,
+  "maxDD": -243.96,
+  "oos": -1.89,
+  "conviction": 0.122
+ },
+ {
+  "key": "SENSEX rsi2 p=5",
+  "trades": 1675,
+  "pnl": -1179001.7,
+  "sharpe": -1.57,
+  "maxDD": -237.84,
+  "oos": -1.56,
+  "conviction": 0.118
+ },
+ {
+  "key": "SENSEX tom p=0",
+  "trades": 786,
+  "pnl": -652661.21,
+  "sharpe": -1.74,
+  "maxDD": -129.73,
+  "oos": -1.65,
+  "conviction": 0.117
+ },
+ {
+  "key": "SENSEX orb_daily p=0.5",
+  "trades": 1150,
+  "pnl": -1078252.52,
+  "sharpe": -1.94,
+  "maxDD": -205.25,
+  "oos": -2.24,
+  "conviction": 0.112
+ },
+ {
+  "key": "NIFTY streak p=3",
+  "trades": 879,
+  "pnl": -930639.35,
+  "sharpe": -2.06,
+  "maxDD": -193.64,
+  "oos": -1.96,
+  "conviction": 0.095
+ },
+ {
+  "key": "NIFTY rsi2 p=5",
+  "trades": 1694,
+  "pnl": -1681352.55,
+  "sharpe": -1.98,
+  "maxDD": -339.25,
+  "oos": -1.98,
+  "conviction": 0.09
+ },
+ {
+  "key": "NIFTY orb_daily p=0.35",
+  "trades": 1573,
+  "pnl": -1836493.89,
+  "sharpe": -2.24,
+  "maxDD": -349.69,
+  "oos": -2.36,
+  "conviction": 0.088
+ },
+ {
+  "key": "NIFTY rsi2 p=10",
+  "trades": 1795,
+  "pnl": -1902697.38,
+  "sharpe": -2.13,
+  "maxDD": -384.49,
+  "oos": -2.15,
+  "conviction": 0.084
+ },
+ {
+  "key": "NIFTY orb_daily p=0.5",
+  "trades": 1126,
+  "pnl": -1483330.4,
+  "sharpe": -2.52,
+  "maxDD": -285.81,
+  "oos": -2.71,
+  "conviction": 0.071
+ },
+ {
+  "key": "SENSEX donchian p=20",
+  "trades": 560,
+  "pnl": -684896.33,
+  "sharpe": -2.82,
+  "maxDD": -137.86,
+  "oos": -2.93,
+  "conviction": 0.023
+ },
+ {
+  "key": "NIFTY donchian p=20",
+  "trades": 570,
+  "pnl": -812404.69,
+  "sharpe": -2.93,
+  "maxDD": -167.26,
+  "oos": -2.99,
+  "conviction": 0.022
+ },
+ {
+  "key": "SENSEX donchian p=55",
+  "trades": 369,
+  "pnl": -616236.49,
+  "sharpe": -3.93,
+  "maxDD": -123.07,
+  "oos": -4.1,
+  "conviction": -0.047
+ },
+ {
+  "key": "NIFTY donchian p=55",
+  "trades": 396,
+  "pnl": -779227.43,
+  "sharpe": -4.13,
+  "maxDD": -158.13,
+  "oos": -4.1,
+  "conviction": -0.053
+ }
+]
