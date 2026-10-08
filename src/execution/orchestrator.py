@@ -79,6 +79,22 @@ class Orchestrator:
         except Exception:
             return False
 
+    def _guardian(self) -> dict:
+        # cached 15 min — RSS polling every 20s would hammer sources and stall the loop
+        import time as _time, json as _json
+        try:
+            st=_json.loads((ROOT/"logs"/"guardian.json").read_text())
+            ts=datetime.fromisoformat(st.get("ts","2000-01-01"))
+            if (ist_now()-ts).total_seconds() < 15*60:
+                return st
+        except Exception:
+            pass
+        try:
+            from src.guardian import assess
+            return assess()
+        except Exception as e:
+            return {"level":1,"block_entries":False,"force_flat":False,"reason":f"guardian fail-open: {e}","hits":[]}
+
     def run_once(self, now=None):
         n=now or ist_now()
         t=n.time()
@@ -88,6 +104,11 @@ class Orchestrator:
             if self._position:
                 self._flatten(reason)
             return {"action":"kill","reason":reason}
+        # event gate: L3 force-flat, L2 pause entries
+        g=self._guardian()
+        if g.get("force_flat") and (self._position or self._intraday_open):
+            self._flatten(f"guardian_L3:{g.get('reason','')[:80]}")
+            return {"action":"flat_guardian","reason":g.get("reason","")[:160]}
 
         # 09:20 overnight exit
         if self.entry_t > self.exit_t:
@@ -109,6 +130,8 @@ class Orchestrator:
         # 15:22 entry — per-engine gates (two-engine portfolio)
         is_entry_window = self.entry_t.hour==t.hour and abs(t.minute - self.entry_t.minute) <= 5
         if is_entry_window and not self._position:
+            if g.get("block_entries"):
+                return {"action":"skip","reason":f"guardian L{g.get('level')}: {g.get('reason','')[:120]}"}
             uni_by_sym={u["symbol"]: u for u in self.cfg.get("universe",{}).get("indexes",[])}
             skips=[]
             for eng in self.engines:
@@ -145,6 +168,8 @@ class Orchestrator:
         # intraday ORB engine — paper broker only, 09:30-14:30 window
         if isinstance(self.broker, PaperBroker) and self.intraday_engines:
             if dtime(9,30) <= t <= dtime(14,30):
+                if g.get("block_entries"):
+                    return {"action":"skip","reason":f"guardian L{g.get('level')} pause intraday"}
                 res=self._intraday_tick(n)
                 if res and res.get("action")!="hold":
                     return res
