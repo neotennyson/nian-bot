@@ -53,12 +53,8 @@ def round_trips(df: pd.DataFrame, lot_of: dict[str,int], costs: CostModel) -> pd
             m=min(oq, remain)
             lot=lot_of.get(sym, 1)
             lots=max(1, m // lot)
-            if oside=="BUY":
-                entry, exit_=opx, px
-                direction=1
-            else:
-                entry, exit_=px, opx
-                direction=-1
+            entry, exit_=opx, px
+            direction=1 if oside=="BUY" else -1
             gross, cost, net_=costs.fut_pnl(entry, exit_, lots, lot, direction)
             trades.append({
                 "symbol": sym, "engine": engine_of(f"{otag}|{r['tag']}", sym),
