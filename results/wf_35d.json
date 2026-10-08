@@ -1,0 +1,7 @@
+{
+  "panel": "35 days minute 2026-08-18 -> 2026-10-07, train 24d / test 11d, full NSE costs",
+  "SENSEX_short_ORB30_tp0.01": {"train": 9762, "train_n": 12, "test": 22239, "test_n": 7, "verdict": "STRENGTHENS out-of-sample, paper-tracked"},
+  "NIFTY_short_ORB30_tp0.01": {"train": -4056, "train_n": 11, "test": 25111, "test_n": 7, "verdict": "INCONSISTENT (train red, test green) — watch only"},
+  "BANKNIFTY_long_ORB30_tp0.01": {"train": 23838, "train_n": 17, "test": -4389, "test_n": 7, "verdict": "KILLED stays killed — flips sign every window, noise"},
+  "note": "BANKNIFTY kill was first made on partial panel; full-panel green (+19k) then WF test red (-4.4k) confirms noise, kill stands"
+}
