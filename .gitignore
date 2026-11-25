@@ -10,3 +10,5 @@ logs/*.json
 !results/backtest_report.json
 results/*.csv
 .DS_Store
+
+logs/

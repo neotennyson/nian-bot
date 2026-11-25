@@ -1,0 +1,136 @@
+{
+ "iter": 53,
+ "ts": "2026-11-04T00:20:40.998763",
+ "bar": {
+  "conviction": 0.6,
+  "oos_sharpe": 1.0,
+  "oos_trades": 20
+ },
+ "top": [
+  {
+   "key": "SENSEX overnight VIX15 H21",
+   "trades": 1282,
+   "pnl": 915148.04,
+   "sharpe": 2.14,
+   "maxDD": -9.31,
+   "oos": 2.8,
+   "oos_trades": 775,
+   "last30": -73679,
+   "conviction": 0.759
+  },
+  {
+   "key": "SENSEX overnight VIX17 H21",
+   "trades": 794,
+   "pnl": 671155.96,
+   "sharpe": 2.22,
+   "maxDD": -10.96,
+   "oos": 2.62,
+   "oos_trades": 538,
+   "last30": -88429,
+   "conviction": 0.742
+  },
+  {
+   "key": "SENSEX overnight VIX15 H63",
+   "trades": 1390,
+   "pnl": 960999.87,
+   "sharpe": 1.98,
+   "maxDD": -17.81,
+   "oos": 1.85,
+   "oos_trades": 839,
+   "last30": -29996,
+   "conviction": 0.738
+  },
+  {
+   "key": "SENSEX overnight VIX19 H21",
+   "trades": 475,
+   "pnl": 607803.16,
+   "sharpe": 3.21,
+   "maxDD": -7.32,
+   "oos": 0,
+   "oos_trades": 0,
+   "last30": 2762,
+   "conviction": 0.737
+  },
+  {
+   "key": "SENSEX overnight VIX15 H126",
+   "trades": 1467,
+   "pnl": 1123492.89,
+   "sharpe": 1.99,
+   "maxDD": -17.58,
+   "oos": 1.91,
+   "oos_trades": 911,
+   "last30": -66811,
+   "conviction": 0.737
+  },
+  {
+   "key": "SENSEX overnight VIX21 H21",
+   "trades": 274,
+   "pnl": 448453.18,
+   "sharpe": 3.69,
+   "maxDD": -5.02,
+   "oos": 0,
+   "oos_trades": 0,
+   "last30": 38898,
+   "conviction": 0.709
+  },
+  {
+   "key": "SENSEX overnight VIX17 H126",
+   "trades": 926,
+   "pnl": 767599.62,
+   "sharpe": 1.85,
+   "maxDD": -22.09,
+   "oos": 1.66,
+   "oos_trades": 654,
+   "last30": 23423,
+   "conviction": 0.683
+  },
+  {
+   "key": "SENSEX overnight VIX19 H63",
+   "trades": 524,
+   "pnl": 542536.99,
+   "sharpe": 2.34,
+   "maxDD": -14.11,
+   "oos": 7.96,
+   "oos_trades": 55,
+   "last30": 84339,
+   "conviction": 0.682
+  },
+  {
+   "key": "SENSEX overnight VIX17 H63",
+   "trades": 856,
+   "pnl": 613393.82,
+   "sharpe": 1.77,
+   "maxDD": -21.28,
+   "oos": 1.52,
+   "oos_trades": 589,
+   "last30": 51186,
+   "conviction": 0.68
+  },
+  {
+   "key": "SENSEX overnight VIX19 H126",
+   "trades": 584,
+   "pnl": 694838.89,
+   "sharpe": 2.4,
+   "maxDD": -23.46,
+   "oos": 7.96,
+   "oos_trades": 55,
+   "last30": 117269,
+   "conviction": 0.679
+  }
+ ],
+ "paper": {
+  "paper_trades": 3,
+  "paper_net": -3103.39
+ },
+ "promoted": {
+  "key": "SENSEX overnight VIX17 H126",
+  "trades": 926,
+  "pnl": 767599.62,
+  "sharpe": 1.85,
+  "maxDD": -22.09,
+  "oos": 1.66,
+  "oos_trades": 654,
+  "last30": 23423,
+  "conviction": 0.683
+ }
+}

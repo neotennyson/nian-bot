@@ -1,0 +1,164 @@
+[
+  {
+    "symbol": "SENSEX",
+    "orb": 15,
+    "dir": "short",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 17,
+    "pnl": 5950.0
+  },
+  {
+    "symbol": "SENSEX",
+    "orb": 15,
+    "dir": "long",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 8,
+    "pnl": -28243.0
+  },
+  {
+    "symbol": "SENSEX",
+    "orb": 15,
+    "dir": "both",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 20,
+    "pnl": -945.0
+  },
+  {
+    "symbol": "SENSEX",
+    "orb": 30,
+    "dir": "short",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 16,
+    "pnl": 2623.0
+  },
+  {
+    "symbol": "SENSEX",
+    "orb": 30,
+    "dir": "long",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 8,
+    "pnl": -28629.0
+  },
+  {
+    "symbol": "SENSEX",
+    "orb": 30,
+    "dir": "both",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 20,
+    "pnl": -7641.0
+  },
+  {
+    "symbol": "NIFTY",
+    "orb": 15,
+    "dir": "short",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 18,
+    "pnl": 3762.0
+  },
+  {
+    "symbol": "NIFTY",
+    "orb": 15,
+    "dir": "long",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 8,
+    "pnl": -29258.0
+  },
+  {
+    "symbol": "NIFTY",
+    "orb": 15,
+    "dir": "both",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 21,
+    "pnl": -3235.0
+  },
+  {
+    "symbol": "NIFTY",
+    "orb": 30,
+    "dir": "short",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 16,
+    "pnl": -10251.0
+  },
+  {
+    "symbol": "NIFTY",
+    "orb": 30,
+    "dir": "long",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 8,
+    "pnl": -29615.0
+  },
+  {
+    "symbol": "NIFTY",
+    "orb": 30,
+    "dir": "both",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 20,
+    "pnl": -19755.0
+  },
+  {
+    "symbol": "BANKNIFTY",
+    "orb": 15,
+    "dir": "short",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 15,
+    "pnl": -30020.0
+  },
+  {
+    "symbol": "BANKNIFTY",
+    "orb": 15,
+    "dir": "long",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 9,
+    "pnl": -7085.0
+  },
+  {
+    "symbol": "BANKNIFTY",
+    "orb": 15,
+    "dir": "both",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 19,
+    "pnl": -25647.0
+  },
+  {
+    "symbol": "BANKNIFTY",
+    "orb": 30,
+    "dir": "short",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 13,
+    "pnl": -40631.0
+  },
+  {
+    "symbol": "BANKNIFTY",
+    "orb": 30,
+    "dir": "long",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 9,
+    "pnl": -10919.0
+  },
+  {
+    "symbol": "BANKNIFTY",
+    "orb": 30,
+    "dir": "both",
+    "stop": 0.005,
+    "target": 0.005,
+    "trades": 17,
+    "pnl": -40092.0
+  }
+]
